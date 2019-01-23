@@ -35,6 +35,8 @@ class NanoVis {
     void add_points(const std::vector<Eigen::Vector3d> &points, const Eigen::Vector3d &color = {1.0, 1.0, 0.0}, const double &point_size = 3.0);
     void add_points(const std::vector<Eigen::Vector3d> &points, const std::vector<Eigen::Vector3d> &colors, const double &point_size = 3.0);
 
+  void add_cameras(const std::vector<Eigen::Quaterniond> &orientations, const std::vector<Eigen::Vector3d> &positions, const std::vector<Eigen::Vector3d> &colors, const double &camera_size = 0.5);
+
     void add_path(const std::vector<Eigen::Vector3d> &vertices, const Eigen::Vector3d &color = {1.0, 1.0, 0.0});
     void add_path(const std::vector<Eigen::Vector3d> &vertices, const std::vector<Eigen::Vector3d> &colors);
 

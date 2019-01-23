@@ -292,6 +292,58 @@ void NanoVis::add_points(const std::vector<Eigen::Vector3d> &points, const std::
     impl->window->add_renderer(renderer);
 }
 
+void NanoVis::add_cameras(const std::vector<Eigen::Quaterniond> &orientations,
+    const std::vector<Eigen::Vector3d> &positions, 
+    const std::vector<Eigen::Vector3d> &colors, 
+    const double &camera_size) {
+    auto renderer = [&orientations, &positions, &colors, camera_size](nanogui::GLShader &shader) {
+        const double w = camera_size;
+        const double h = w * 0.75;
+        const double z = w * 0.6;
+        static std::array<Eigen::Vector3d, 18> cam_vertices;
+        // static std::vector<Eigen::Vector3d> cam_vertices;
+        static bool is_first = true;
+        if (is_first) {
+            is_first = false;
+            cam_vertices[0] = {0, 0, 0};
+            cam_vertices[1] = {w, h, z};
+            cam_vertices[2] = {0, 0, 0};
+            cam_vertices[3] = {w, -h, z};
+            cam_vertices[4] = {0, 0, 0};
+            cam_vertices[5] = {-w,-h, z};
+            cam_vertices[6] = {0, 0, 0};
+            cam_vertices[7] = {-w, h, z};
+            cam_vertices[8] =  {0, 0, 0};
+            cam_vertices[9] =  {0, 0, 0};
+            cam_vertices[10] = {w, h, z};
+            cam_vertices[11] = {w, -h, z};
+            cam_vertices[12] = {-w, h, z};
+            cam_vertices[13] = {-w, -h, z};
+            cam_vertices[14] = {-w, h, z};
+            cam_vertices[15] = {w, h, z};
+            cam_vertices[16] = {-w, -h, z};
+            cam_vertices[17] = {w, -h, z};
+        }
+        size_t num_cam = orientations.size();
+        Eigen::MatrixXf dpoints;
+        Eigen::MatrixXf dcolors;
+        dpoints.resize(3, cam_vertices.size() * num_cam);
+        dcolors.resize(3, cam_vertices.size() * num_cam);
+        for (size_t i_cam = 0; i_cam < num_cam; ++i_cam) {
+            for (size_t j_vert = 0; j_vert < cam_vertices.size(); ++j_vert) {
+                Eigen::Vector3d v_world = orientations[i_cam] * cam_vertices[j_vert] + positions[i_cam];
+                size_t idx = i_cam * cam_vertices.size() + j_vert;
+                dpoints.col(idx) = v_world.cast<float>();
+                dcolors.col(idx) = colors[i_cam].cast<float>();
+            }
+        }
+        shader.uploadAttrib("point", dpoints);
+        shader.uploadAttrib("color", dcolors);
+        shader.drawArray(GL_LINES, 0, dpoints.cols());
+    };
+    impl->window->add_renderer(renderer);
+}
+
 void NanoVis::add_path(const std::vector<Eigen::Vector3d> &vertices, const Eigen::Vector3d &color) {
     auto renderer = [&vertices, color](nanogui::GLShader &shader) {
         if (vertices.size() > 0) {
